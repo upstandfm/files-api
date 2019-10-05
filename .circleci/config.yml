@@ -4,7 +4,7 @@
 # https://medium.com/@kinghuang/docker-compose-anchors-aliases-extensions-a1e4105d70bd
 docker_image: &docker_image
   docker:
-    - image: circleci/node:12.9.0
+    - image: circleci/node:12.10.0
 
 # Caching, for more info see:
 # https://circleci.com/docs/2.0/caching/#section=projects
@@ -98,7 +98,7 @@ jobs:
       - run:
           name: Release to prod
           command: |
-            $(npm bin)/serverless deploy
+            $(npm bin)/serverless deploy --region eu-central-1
 
 workflows:
   build_branch:
