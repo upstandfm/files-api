@@ -1,0 +1,76 @@
+org: upstandfm
+app: api
+service: files-api
+
+plugins:
+  - serverless-domain-manager
+
+custom:
+  customDomain:
+    domainName: api.upstand.fm
+    basePath: files
+    stage: ${opt:stage, 'prod'}
+    createRoute53Record: false
+  cors:
+    origin: '*'
+  authorizer:
+    arn: ${secrets:AUTH0_AUTHORIZER_ARN}
+    resultTtlInSeconds: 60
+    identitySource: method.request.header.Authorization
+    # Note that Bearer must be capitalized
+    identityValidationExpression: '^Bearer [-0-9a-zA-z\.]*$'
+    type: token
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  stage: ${opt:stage, 'prod'}
+  region: ${opt:region, 'eu-central-1'}
+  cfnRole: ${secrets:CFN_ROLE_ARN}
+  memorySize: 128
+  timeout: 3
+  deploymentBucket:
+    name: upstandfm-deployments
+    serverSideEncryption: AES256 # when using server-side encryption
+  environment:
+    CORS_ALLOW_ORIGIN: ${self:custom.cors.origin}
+
+package:
+  exclude:
+    - ./*
+    - ./**/*.test.js
+  include:
+    - node_modules
+    - src
+
+functions:
+  createUploadUrl:
+    handler: src/handler.createUploadUrl
+    description: Creates a signed upload URL
+    events:
+      - http:
+          method: post
+          path: /
+          cors: ${self:custom.cors}
+          # authorizer: ${self:custom.authorizer}
+
+resources:
+  Resources:
+    GatewayResponseDefault4XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+    GatewayResponseDefault5XX:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: DEFAULT_5XX
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
