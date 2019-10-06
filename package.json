@@ -46,7 +46,6 @@
     "@hapi/joi": "^16.1.4",
     "@mooncake-dev/check-symbols": "^1.0.2",
     "@mooncake-dev/lambda-body-parser": "^1.0.3",
-    "@mooncake-dev/lambda-res-handler": "^1.1.2",
-    "shortid": "^2.2.15"
+    "@mooncake-dev/lambda-res-handler": "^1.1.2"
   }
 }
