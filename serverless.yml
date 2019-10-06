@@ -34,6 +34,7 @@ provider:
     serverSideEncryption: AES256 # when using server-side encryption
   environment:
     CORS_ALLOW_ORIGIN: ${self:custom.cors.origin}
+    UPLOAD_FILE_SCOPE: 'upload:file'
 
 package:
   exclude:
@@ -52,7 +53,7 @@ functions:
           method: post
           path: /
           cors: ${self:custom.cors}
-          # authorizer: ${self:custom.authorizer}
+          authorizer: ${self:custom.authorizer}
 
 resources:
   Resources:

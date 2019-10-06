@@ -2,8 +2,9 @@
 
 const createResHandler = require('@mooncake-dev/lambda-res-handler');
 const handleAndSendError = require('./handle-error');
+const validateScope = require('./validate-scope');
 
-const { CORS_ALLOW_ORIGIN } = process.env;
+const { CORS_ALLOW_ORIGIN, UPLOAD_FILE_SCOPE } = process.env;
 
 const defaultHeaders = {
   'Access-Control-Allow-Origin': CORS_ALLOW_ORIGIN
@@ -29,6 +30,10 @@ const sendRes = createResHandler(defaultHeaders);
  */
 module.exports.createUploadUrl = async (event, context) => {
   try {
+    const { authorizer } = event.requestContext;
+
+    validateScope(authorizer.scope, UPLOAD_FILE_SCOPE);
+
     return sendRes.json(200, { status: 'ok' });
   } catch (err) {
     return handleAndSendError(context, err, sendRes);
