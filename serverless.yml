@@ -35,6 +35,20 @@ provider:
   environment:
     CORS_ALLOW_ORIGIN: ${self:custom.cors.origin}
     UPLOAD_FILE_SCOPE: 'upload:file'
+    # The ARN has the format "arn:aws:s3:::bucketName"
+    # Splitting on ":::" gives us the name
+    S3_MEDIA_BUCKET_NAME:
+      'Fn::Select':
+        ['1', { 'Fn::Split': [':::', '${state:infra.mediaBucketArn}'] }]
+  # See: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_actions-resources-contextkeys.html
+  iamRoleStatements:
+    # Custom: Allows interacting with media objects in the bucket (indirectly)
+    - Effect: Allow
+      Action:
+        - s3:PutObject
+      # MUST contain "/*" because resource type is "object"
+      Resource:
+        'Fn::Join': ['/', ['${state:infra.mediaBucketArn}', '*']]
 
 package:
   exclude:
@@ -45,13 +59,13 @@ package:
     - src
 
 functions:
-  createUploadUrl:
-    handler: src/handler.createUploadUrl
-    description: Creates a signed upload URL
+  createStandupUpdateUploadUrl:
+    handler: src/handler.createStandupUpdateUploadUrl
+    description: Creates a signed URL to upload a standup update
     events:
       - http:
           method: post
-          path: /
+          path: /standup-update
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
 
