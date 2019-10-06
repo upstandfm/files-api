@@ -4,8 +4,8 @@ const validateScope = require('./validate-scope');
 
 describe('validateScope(scope, requiredScope)', () => {
   it('throws with custom error when "scope" does not have "requiredScope"', () => {
-    const scope = 'create:standup read:standups';
-    const requiredScope = 'delete:standup';
+    const scope = '';
+    const requiredScope = 'upload:file';
 
     try {
       validateScope(scope, requiredScope);

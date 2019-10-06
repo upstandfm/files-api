@@ -8,7 +8,7 @@ const defaultJoi = Joi.defaults(_schema =>
   })
 );
 
-const _standupUpdateFile = defaultJoi.object().keys({
+const _standupFile = defaultJoi.object().keys({
   standupId: Joi.string().required(),
 
   mimeType: Joi.string()
@@ -37,7 +37,7 @@ function _validate(data, schema) {
 }
 
 module.exports = {
-  validateStandupUpdateFile(data = {}) {
-    return _validate(data, _standupUpdateFile);
+  validateStandupFile(data = {}) {
+    return _validate(data, _standupFile);
   }
 };
