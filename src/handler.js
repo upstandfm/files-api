@@ -11,7 +11,7 @@ const signUrl = require('./sign-url');
 const {
   CORS_ALLOW_ORIGIN,
   UPLOAD_FILE_SCOPE,
-  S3_MEDIA_BUCKET_NAME
+  S3_RECORDINGS_BUCKET_NAME
 } = process.env;
 
 const defaultHeaders = {
@@ -62,7 +62,7 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
 
     const url = await signUrl.upload(
       s3Client,
-      S3_MEDIA_BUCKET_NAME,
+      S3_RECORDINGS_BUCKET_NAME,
       storageKey,
       mimeType,
       expiresInSec
