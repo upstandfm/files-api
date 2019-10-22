@@ -85,7 +85,7 @@ functions:
     events:
       - http:
           method: post
-          path: /standup-update
+          path: /standup-update/upload
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
   createStandupUpdateDownloadUrl:
