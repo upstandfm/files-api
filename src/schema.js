@@ -21,6 +21,17 @@ const _standupFile = defaultJoi.object().keys({
     .max(70)
 });
 
+const _standupUpdateDownload = defaultJoi.object().keys({
+  fileKey: Joi.string()
+    // A valid S3 key looks like:
+    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename.mp3"
+    .regex(
+      /^audio\/standups\/.+\/\d\d?-\d\d?-\d\d\d\d\/.+\/\w+\.mp3/,
+      'file-key'
+    )
+    .required()
+});
+
 function _validate(data, schema) {
   const { error, value } = schema.validate(data);
 
@@ -39,5 +50,9 @@ function _validate(data, schema) {
 module.exports = {
   validateStandupFile(data = {}) {
     return _validate(data, _standupFile);
+  },
+
+  validateStandupUpdateDownload(data = {}) {
+    return _validate(data, _standupUpdateDownload);
   }
 };

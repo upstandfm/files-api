@@ -11,7 +11,9 @@ const signUrl = require('./sign-url');
 const {
   CORS_ALLOW_ORIGIN,
   UPLOAD_FILE_SCOPE,
-  S3_RECORDINGS_BUCKET_NAME
+  DOWNLOAD_FILE_SCOPE,
+  S3_RECORDINGS_BUCKET_NAME,
+  S3_TRANSCODED_RECORDINGS_BUCKET_NAME
 } = process.env;
 
 const defaultHeaders = {
@@ -22,7 +24,7 @@ const sendRes = createResHandler(defaultHeaders);
 const s3Client = new S3();
 
 /**
- * Lambda APIG proxy integration that creates signed URL, to upload a standup
+ * Lambda APIG proxy integration that creates a signed URL, to upload a standup
  * update.
  *
  * @param {Object} event - HTTP input
@@ -66,6 +68,52 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
       S3_RECORDINGS_BUCKET_NAME,
       storageKey,
       mimeType,
+      expiresInSec
+    );
+
+    const resData = {
+      url
+    };
+    return sendRes.json(201, resData);
+  } catch (err) {
+    return handleAndSendError(context, err, sendRes);
+  }
+};
+
+/**
+ * Lambda APIG proxy integration that creates a signed URL, to download a
+ * standup update.
+ *
+ * @param {Object} event - HTTP input
+ * @param {Object} context - AWS lambda context
+ *
+ * @return {Object} HTTP output
+ *
+ * For more info on HTTP input see:
+ * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-input-format
+ *
+ * For more info on AWS lambda context see:
+ * https://docs.aws.amazon.com/lambda/latest/dg/nodejs-prog-model-context.html
+ *
+ * For more info on HTTP output see:
+ * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format
+ */
+module.exports.createStandupUpdateDownloadUrl = async (event, context) => {
+  try {
+    const { authorizer } = event.requestContext;
+
+    validateScope(authorizer.scope, DOWNLOAD_FILE_SCOPE);
+
+    const body = bodyParser.json(event.body);
+    const { fileKey } = schema.validateStandupUpdateDownload(body);
+
+    // 5 minutes
+    const expiresInSec = 60 * 5;
+
+    const url = await signUrl.download(
+      s3Client,
+      S3_TRANSCODED_RECORDINGS_BUCKET_NAME,
+      fileKey,
       expiresInSec
     );
 
