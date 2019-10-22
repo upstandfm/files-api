@@ -39,11 +39,21 @@ provider:
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     CORS_ALLOW_ORIGIN: ${self:custom.cors.origin}
     UPLOAD_FILE_SCOPE: 'upload:file'
+    DOWNLOAD_FILE_SCOPE: 'download:file'
     # The ARN has the format "arn:aws:s3:::bucketName"
     # Splitting on ":::" gives us the name
     S3_RECORDINGS_BUCKET_NAME:
       'Fn::Select':
         ['1', { 'Fn::Split': [':::', '${state:infra.recordingsBucketArn}'] }]
+    S3_TRANSCODED_RECORDINGS_BUCKET_NAME:
+      'Fn::Select':
+        [
+          '1',
+          {
+            'Fn::Split':
+              [':::', '${state:infra.transcodedRecordingsBucketArn}'],
+          },
+        ]
   # See: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_actions-resources-contextkeys.html
   iamRoleStatements:
     # Custom: Allows interacting with media objects in the bucket (indirectly)
@@ -53,6 +63,12 @@ provider:
       # MUST contain "/*" because resource type is "object"
       Resource:
         'Fn::Join': ['/', ['${state:infra.recordingsBucketArn}', '*']]
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+      # MUST contain "/*" because resource type is "object"
+      Resource:
+        'Fn::Join': ['/', ['${state:infra.transcodedRecordingsBucketArn}', '*']]
 
 package:
   exclude:
@@ -70,6 +86,15 @@ functions:
       - http:
           method: post
           path: /standup-update
+          cors: ${self:custom.cors}
+          authorizer: ${self:custom.authorizer}
+  createStandupUpdateDownloadUrl:
+    handler: src/handler.createStandupUpdateDownloadUrl
+    description: Creates a signed URL to download a standup update
+    events:
+      - http:
+          method: post
+          path: /standup-update/download
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
 
