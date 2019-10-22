@@ -48,7 +48,11 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
     validateScope(authorizer.scope, UPLOAD_FILE_SCOPE);
 
     const body = bodyParser.json(event.body);
-    const { standupId, mimeType, filename } = schema.validateStandupFile(body);
+    const {
+      standupId,
+      mimeType,
+      filename
+    } = schema.validateStandupUpdateUpload(body);
 
     // NOTE: This can be potentially "tricky", especially with users uploading
     // across timezones
@@ -56,8 +60,11 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
     // paralyzing progress of building out the "core building blocks", but
     // it will be revisited
     const now = new Date();
-    const dateKey = `${now.getDate()}-${now.getMonth() +
-      1}-${now.getFullYear()}`;
+    const monthIndex = now.getMonth();
+    const dateKey = `${now.getDate()}-${monthIndex + 1}-${now.getFullYear()}`;
+
+    // A valid storage key looks like:
+    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename.webm"
     const storageKey = `audio/standups/${standupId}/${dateKey}/${authorizer.userId}/${filename}`;
 
     // 5 minutes
