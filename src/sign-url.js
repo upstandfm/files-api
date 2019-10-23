@@ -13,18 +13,26 @@ module.exports = {
    * @return {Promise} Resolves with a signed URL
    *
    * For more information see:
-   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrlPromise-property
+   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property
    */
   upload(client, bucketName, storageKey, mimeType, expiresInSec) {
-    const params = {
-      Bucket: bucketName,
-      Key: storageKey,
-      ContentType: mimeType,
-      ServerSideEncryption: 'AES256',
-      Expires: expiresInSec
-    };
+    return new Promise((resolve, reject) => {
+      const params = {
+        Bucket: bucketName,
+        Key: storageKey,
+        ContentType: mimeType,
+        ServerSideEncryption: 'AES256',
+        Expires: expiresInSec
+      };
 
-    return client.getSignedUrlPromise('putObject', params);
+      client.getSignedUrl('putObject', params, (err, url) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(url);
+      });
+    });
   },
 
   /**
@@ -38,15 +46,23 @@ module.exports = {
    * @return {Promise} Resolves with a signed URL
    *
    * For more information see:
-   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrlPromise-property
+   * https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#getSignedUrl-property
    */
   download(client, bucketName, storageKey, expiresInSec) {
-    const params = {
-      Bucket: bucketName,
-      Key: storageKey,
-      Expires: expiresInSec
-    };
+    return new Promise((resolve, reject) => {
+      const params = {
+        Bucket: bucketName,
+        Key: storageKey,
+        Expires: expiresInSec
+      };
 
-    return client.getSignedUrlPromise('getObject', params);
+      client.getSignedUrl('getObject', params, (err, url) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(url);
+      });
+    });
   }
 };
