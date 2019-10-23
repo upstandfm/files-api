@@ -32,18 +32,18 @@
   },
   "devDependencies": {
     "eslint": "^6.4.0",
-    "eslint-config-prettier": "^6.3.0",
+    "eslint-config-prettier": "^6.4.0",
     "eslint-plugin-prettier": "^3.1.0",
-    "husky": "^3.0.5",
+    "husky": "^3.0.9",
     "jest": "^24.9.0",
-    "jest-junit": "^8.0.0",
-    "lint-staged": "^9.2.5",
+    "jest-junit": "^9.0.0",
+    "lint-staged": "^9.4.2",
     "prettier": "^1.18.2",
-    "serverless": "^1.53.0",
+    "serverless": "^1.55.0",
     "serverless-domain-manager": "^3.3.0"
   },
   "dependencies": {
-    "@hapi/joi": "^16.1.4",
+    "@hapi/joi": "^16.1.7",
     "@mooncake-dev/check-symbols": "^1.0.2",
     "@mooncake-dev/lambda-body-parser": "^1.0.3",
     "@mooncake-dev/lambda-res-handler": "^1.1.2"
