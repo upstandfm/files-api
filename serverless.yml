@@ -54,6 +54,11 @@ provider:
               [':::', '${state:infra.transcodedRecordingsBucketArn}'],
           },
         ]
+    # The ARN has the format "arn:aws:dynamodb:::table/tableName"
+    # Splitting on "/" gives us the name
+    DYNAMODB_STANDUPS_TABLE_NAME:
+      'Fn::Select':
+        ['1', { 'Fn::Split': ['/', '${state:infra.standupsTableArn}'] }]
   # See: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_actions-resources-contextkeys.html
   iamRoleStatements:
     # Custom: Allows interacting with media objects in the bucket (indirectly)
@@ -69,6 +74,10 @@ provider:
       # MUST contain "/*" because resource type is "object"
       Resource:
         'Fn::Join': ['/', ['${state:infra.transcodedRecordingsBucketArn}', '*']]
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+      Resource: ${state:infra.standupsTableArn}
 
 package:
   exclude:
