@@ -17,7 +17,7 @@ module.exports = function validateScope(scope, requiredScope) {
   if (!isAuthorized) {
     const err = new Error('Forbidden');
     err.statusCode = 403;
-    err.details = `you need scope "${requiredScope}"`;
+    err.details = `You need scope "${requiredScope}"`;
     throw err;
   }
 };

@@ -14,7 +14,7 @@ describe('validateScope(scope, requiredScope)', () => {
       expect(err).toHaveProperty('message', 'Forbidden');
       expect(err).toHaveProperty(
         'details',
-        `you need scope "${requiredScope}"`
+        `You need scope "${requiredScope}"`
       );
     }
   });

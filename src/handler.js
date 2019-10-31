@@ -72,7 +72,7 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
     if (!userIsStandupMember) {
       const err = new Error('Standup Not Found');
       err.statusCode = 404;
-      err.details = 'You might not be a member of this standup.';
+      err.details = 'You might not be a member of this standup';
       throw err;
     }
 
@@ -148,7 +148,7 @@ module.exports.createStandupUpdateDownloadUrl = async (event, context) => {
     if (!userIsStandupMember) {
       const err = new Error('Standup Not Found');
       err.statusCode = 404;
-      err.details = 'You might not be a member of this standup.';
+      err.details = 'You might not be a member of this standup';
       throw err;
     }
 
