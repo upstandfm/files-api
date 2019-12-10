@@ -26,7 +26,7 @@ const _standupUpdateDownload = defaultJoi.object().keys({
     // A valid S3 key looks like:
     // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename.mp3"
     .regex(
-      /^audio\/standups\/.+\/\d\d?-\d\d?-\d\d\d\d\/.+\/\w+\.mp3/,
+      /^audio\/standups\/.+\/\d\d?-\d\d?-\d\d\d\d\/.+\/.+\.mp3/,
       'file-key'
     )
     .required()
