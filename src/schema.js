@@ -18,13 +18,15 @@ const _standupUpdateUpload = defaultJoi.object().keys({
 
   filename: Joi.string()
     .required()
-    .max(70)
+    .max(70),
+
+  name: Joi.string().max(70)
 });
 
 const _standupUpdateDownload = defaultJoi.object().keys({
   fileKey: Joi.string()
     // A valid S3 key looks like:
-    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename.mp3"
+    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:name.mp3"
     .regex(
       /^audio\/standups\/.+\/\d\d?-\d\d?-\d\d\d\d\/.+\/.+\.mp3/,
       'file-key'
