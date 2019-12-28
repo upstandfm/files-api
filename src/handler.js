@@ -60,7 +60,10 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
     const {
       standupId,
       mimeType,
-      filename
+
+      // "filename" includes a file extension, e.g. "1a2z3x.webm"
+      filename,
+      name
     } = schema.validateStandupUpdateUpload(body);
 
     const userIsStandupMember = await standups.userIsMember(
@@ -76,28 +79,38 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
       throw err;
     }
 
-    // NOTE: This can be potentially "tricky", especially with users uploading
-    // across timezones
+    // NOTE: This is "tricky", especially with users uploading across timezones
     // For a very first version we keep it simple like this, so it's not
     // paralyzing progress of building out the "core building blocks", but
-    // it will be revisited
+    // it must be revisited
     const now = new Date();
     const monthIndex = now.getMonth();
     const dateKey = `${now.getDate()}-${monthIndex + 1}-${now.getFullYear()}`;
 
     // A valid storage key looks like:
-    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename.webm"
+    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename"
     const storageKey = `audio/standups/${standupId}/${dateKey}/${authorizer.userId}/${filename}`;
 
     // 5 minutes
     const expiresInSec = 60 * 5;
+
+    // Note that any user defined metadata needs to be sent as a custom header
+    // in the request using the signed URL to upload data.
+    // This header must "match" the metadata "key" itself, i.e.
+    // "x-amz-meta-:key".
+    // For more info see: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+    const metadata = {
+      // This key requires the header: "x-amz-meta-name"
+      name
+    };
 
     const url = await signUrl.upload(
       s3Client,
       S3_RECORDINGS_BUCKET_NAME,
       storageKey,
       mimeType,
-      expiresInSec
+      expiresInSec,
+      metadata
     );
 
     const resData = {
@@ -137,7 +150,7 @@ module.exports.createStandupUpdateDownloadUrl = async (event, context) => {
     const { fileKey } = schema.validateStandupUpdateDownload(body);
 
     // A valid S3 key looks like:
-    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename.mp3"
+    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:name.mp3"
     const [, , standupId] = fileKey.split('/');
     const userIsStandupMember = await standups.userIsMember(
       documentClient,
