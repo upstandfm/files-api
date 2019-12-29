@@ -63,7 +63,13 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
 
       // "filename" includes a file extension, e.g. "1a2z3x.webm"
       filename,
-      name
+
+      // Note that any user defined metadata needs to be sent as a custom header
+      // in the request using the signed URL to upload data.
+      // This header must "match" the metadata "key" itself, i.e.
+      // "x-amz-meta-:key".
+      // For more info see: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
+      metadata
     } = schema.validateStandupUpdateUpload(body);
 
     const userIsStandupMember = await standups.userIsMember(
@@ -93,16 +99,6 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
 
     // 5 minutes
     const expiresInSec = 60 * 5;
-
-    // Note that any user defined metadata needs to be sent as a custom header
-    // in the request using the signed URL to upload data.
-    // This header must "match" the metadata "key" itself, i.e.
-    // "x-amz-meta-:key".
-    // For more info see: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
-    const metadata = {
-      // This key requires the header: "x-amz-meta-name"
-      name
-    };
 
     const url = await signUrl.upload(
       s3Client,
