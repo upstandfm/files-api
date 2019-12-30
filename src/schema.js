@@ -22,6 +22,10 @@ const _standupUpdateUpload = defaultJoi.object().keys({
 
   metadata: defaultJoi.object().keys({
     name: Joi.string()
+      // Empty string is not allowed by default
+      // For more info see:
+      // https://hapi.dev/family/joi/?v=16.1.8#string
+      .empty('')
       .alphanum()
       .max(70)
   })
