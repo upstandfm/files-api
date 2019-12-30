@@ -21,7 +21,9 @@ const _standupUpdateUpload = defaultJoi.object().keys({
     .max(70),
 
   metadata: defaultJoi.object().keys({
-    name: Joi.string().max(70)
+    name: Joi.string()
+      .alphanum()
+      .max(70)
   })
 });
 
