@@ -26,7 +26,7 @@ const _standupUpdateUpload = defaultJoi.object().keys({
       // For more info see:
       // https://hapi.dev/family/joi/?v=16.1.8#string
       .empty('')
-      .alphanum()
+      .regex(/[a-zA-Z0-9 ]*/, 'name')
       .max(70)
   })
 });
