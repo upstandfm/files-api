@@ -8,9 +8,7 @@ const defaultJoi = Joi.defaults(_schema =>
   })
 );
 
-const _standupUpdateUpload = defaultJoi.object().keys({
-  standupId: Joi.string().required(),
-
+const _audioUpload = defaultJoi.object().keys({
   mimeType: Joi.string()
     // Allow "audio/*"
     .regex(/^audio\/[\w-]+/, 'mime-type')
@@ -58,8 +56,8 @@ function _validate(data, schema) {
 }
 
 module.exports = {
-  validateStandupUpdateUpload(data = {}) {
-    return _validate(data, _standupUpdateUpload);
+  validateAudioUpload(data = {}) {
+    return _validate(data, _audioUpload);
   },
 
   validateStandupUpdateDownload(data = {}) {

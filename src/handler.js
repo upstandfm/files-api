@@ -5,6 +5,7 @@ const DynamoDB = require('aws-sdk/clients/dynamodb');
 const createResHandler = require('@mooncake-dev/lambda-res-handler');
 const bodyParser = require('@mooncake-dev/lambda-body-parser');
 const handleAndSendError = require('./handle-error');
+const validateAuthorizer = require('./validate-authorizer');
 const validateScope = require('./validate-scope');
 const schema = require('./schema');
 const signUrl = require('./sign-url');
@@ -16,7 +17,8 @@ const {
   DOWNLOAD_FILE_SCOPE,
   S3_RECORDINGS_BUCKET_NAME,
   S3_TRANSCODED_RECORDINGS_BUCKET_NAME,
-  DYNAMODB_STANDUPS_TABLE_NAME
+  DYNAMODB_STANDUPS_TABLE_NAME,
+  WORKSPACES_TABLE_NAME
 } = process.env;
 
 const defaultHeaders = {
@@ -33,8 +35,8 @@ const documentClient = new DynamoDB.DocumentClient({
 });
 
 /**
- * Lambda APIG proxy integration that creates a signed URL, to upload a standup
- * update.
+ * Lambda APIG proxy integration that creates a signed URL to upload an audio
+ * recording for a standup
  *
  * @param {Object} event - HTTP input
  * @param {Object} context - AWS lambda context
@@ -50,10 +52,11 @@ const documentClient = new DynamoDB.DocumentClient({
  * For more info on HTTP output see:
  * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format
  */
-module.exports.createStandupUpdateUploadUrl = async (event, context) => {
+module.exports.createAudioUploadUrl = async (event, context) => {
   try {
     const { authorizer } = event.requestContext;
 
+    validateAuthorizer(authorizer);
     validateScope(authorizer.scope, UPLOAD_FILE_SCOPE);
 
     const body = bodyParser.json(event.body);
@@ -70,36 +73,32 @@ module.exports.createStandupUpdateUploadUrl = async (event, context) => {
       // "x-amz-meta-:key".
       // For more info see: https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html
       metadata
-    } = schema.validateStandupUpdateUpload(body);
+    } = schema.validateAudioUpload(body);
 
-    const userIsStandupMember = await standups.userIsMember(
+    if (metadata.userId !== authorizer.userId) {
+      const err = new Error('Incorrect User ID');
+      err.statusCode = 400;
+      err.details = 'Provide your own user ID.';
+      throw err;
+    }
+
+    const { workspaceId } = authorizer;
+
+    const standupExists = await standups.exists(
       documentClient,
-      DYNAMODB_STANDUPS_TABLE_NAME,
-      standupId,
-      authorizer.userId
+      WORKSPACES_TABLE_NAME,
+      workspaceId,
+      standupId
     );
-    if (!userIsStandupMember) {
+    if (!standupExists) {
       const err = new Error('Standup Not Found');
       err.statusCode = 404;
       err.details = 'You might not be a member of this standup';
       throw err;
     }
 
-    // NOTE: This is "tricky", especially with users uploading across timezones
-    // For a very first version we keep it simple like this, so it's not
-    // paralyzing progress of building out the "core building blocks", but
-    // it must be revisited
-    const now = new Date();
-    const monthIndex = now.getMonth();
-    const dateKey = `${now.getDate()}-${monthIndex + 1}-${now.getFullYear()}`;
-
-    // A valid storage key looks like:
-    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:filename"
-    const storageKey = `audio/standups/${standupId}/${dateKey}/${authorizer.userId}/${filename}`;
-
-    // 5 minutes
-    const expiresInSec = 60 * 5;
-
+    const storageKey = `audio/${workspaceId}/${standupId}/${filename}`;
+    const expiresInSec = 60 * 5; // 5 minutes
     const url = await signUrl.upload(
       s3Client,
       S3_RECORDINGS_BUCKET_NAME,
