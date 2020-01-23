@@ -1,6 +1,6 @@
 'use strict';
 
-const validateAuthorizer = require('./validate-authorizer');
+const validateAuthorizer = require('./authorizer');
 
 const errDetails = `Corrupt authorizer data. Contact "support@upstand.fm"`;
 const errStatusCode = 500;

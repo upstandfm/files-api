@@ -1,6 +1,6 @@
 'use strict';
 
-const validateScope = require('./validate-scope');
+const validateScope = require('./scope');
 
 describe('validateScope(scope, requiredScope)', () => {
   it('throws with custom error when "scope" does not have "requiredScope"', () => {
