@@ -61,7 +61,6 @@ module.exports.createAudioUploadUrl = async (event, context) => {
 
     const body = bodyParser.json(event.body);
     const {
-      standupId,
       mimeType,
 
       // "filename" includes a file extension, e.g. "1a2z3x.webm"
@@ -75,29 +74,49 @@ module.exports.createAudioUploadUrl = async (event, context) => {
       metadata
     } = schema.validateAudioUpload(body);
 
+    // Since we do a "direct upload" from the client, the client must provide
+    // the metadata itself. And therefore we have to check if it provides the
+    // "correct" values for the "workspaceId", "userId", "recordingId".
+
+    if (metadata.workspaceId !== authorizer.workspaceId) {
+      const err = new Error('Incorrect Workspace ID');
+      err.statusCode = 400;
+      err.details = 'Provide your own Workspace ID.';
+      throw err;
+    }
+
     if (metadata.userId !== authorizer.userId) {
       const err = new Error('Incorrect User ID');
       err.statusCode = 400;
-      err.details = 'Provide your own user ID.';
+      err.details = 'Provide your own User ID.';
       throw err;
     }
 
-    const { workspaceId } = authorizer;
+    const [filenameId] = filename.split('.');
+    if (metadata.recordingId !== filenameId) {
+      const err = new Error('Incorrect Recording ID');
+      err.statusCode = 400;
+      err.details = 'The Recording ID must match the ID used in the filename.';
+      throw err;
+    }
 
+    // We also have to verify that the "standupId" exists in the user's
+    // workspace. If it exists it also means the user has access to the standup
     const standupExists = await standups.exists(
       documentClient,
       WORKSPACES_TABLE_NAME,
-      workspaceId,
-      standupId
+      authorizer.workspaceId,
+      metadata.standupId
     );
+
     if (!standupExists) {
       const err = new Error('Standup Not Found');
       err.statusCode = 404;
-      err.details = 'You might not be a member of this standup';
+      err.details = `You might not be a member of this standup, or it doesn't exist.`;
       throw err;
     }
 
-    const storageKey = `audio/${workspaceId}/${standupId}/${filename}`;
+    const storageKey = `audio/${authorizer.workspaceId}/${metadata.standupId}/${filename}`;
     const expiresInSec = 60 * 5; // 5 minutes
     const url = await signUrl.upload(
       s3Client,
