@@ -10,13 +10,15 @@ const defaultJoi = Joi.defaults(_schema =>
 
 const _audioUpload = defaultJoi.object().keys({
   mimeType: Joi.string()
-    // Allow "audio/*"
-    .regex(/^audio\/[\w-]+/, 'mime-type')
+    .regex(/^audio\/webm$/, 'mime-type')
     .required(),
 
   filename: Joi.string()
-    .required()
-    .max(70),
+    // A filename has the format ":fileId.webm", e.g. "1a2z3x.webm"
+    // The "fileId" consists of 7 to 14 URL friendly characters, for more info
+    // see: https://github.com/dylang/shortid
+    .regex(/^[a-zA-Z-0-9_-]{7,14}.webm$/, 'filename')
+    .required(),
 
   metadata: defaultJoi.object().keys({
     workspaceId: Joi.string().required(),
