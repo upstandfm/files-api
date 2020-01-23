@@ -19,6 +19,16 @@ const _audioUpload = defaultJoi.object().keys({
     .max(70),
 
   metadata: defaultJoi.object().keys({
+    workspaceId: Joi.string().required(),
+    userId: Joi.string().required(),
+    standupId: Joi.string().required(),
+    recordingId: Joi.string().required(),
+
+    date: Joi.string()
+      // A valid date has format "YYYY-MM-DD"
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'date')
+      .required(),
+
     name: Joi.string()
       // Empty string is not allowed by default
       // For more info see:
