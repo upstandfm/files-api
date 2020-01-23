@@ -92,8 +92,8 @@ module.exports.createAudioUploadUrl = async (event, context) => {
       throw err;
     }
 
-    const [filenameId] = filename.split('.');
-    if (metadata.recordingId !== filenameId) {
+    const [fileId] = filename.split('.');
+    if (metadata.recordingId !== fileId) {
       const err = new Error('Incorrect Recording ID');
       err.statusCode = 400;
       err.details = 'The Recording ID must match the ID used in the filename.';
