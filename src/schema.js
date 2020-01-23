@@ -41,12 +41,12 @@ const _audioUpload = defaultJoi.object().keys({
   })
 });
 
-const _standupUpdateDownload = defaultJoi.object().keys({
+const _audioDownload = defaultJoi.object().keys({
   fileKey: Joi.string()
-    // A valid S3 key looks like:
-    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:name.mp3"
+    // A valid S3 file key looks like:
+    // "audio/:workspaceId/:standupId/:recordingId.mp3"
     .regex(
-      /^audio\/standups\/.+\/\d\d?-\d\d?-\d\d\d\d\/.+\/.+\.mp3/,
+      /^audio\/[a-zA-Z-0-9_-]{7,14}\/[a-zA-Z-0-9_-]{7,14}\/[a-zA-Z-0-9_-]{7,14}\.mp3$/,
       'file-key'
     )
     .required()
@@ -72,7 +72,7 @@ module.exports = {
     return _validate(data, _audioUpload);
   },
 
-  validateStandupUpdateDownload(data = {}) {
-    return _validate(data, _standupUpdateDownload);
+  validateAudioDownload(data = {}) {
+    return _validate(data, _audioDownload);
   }
 };
