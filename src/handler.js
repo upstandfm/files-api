@@ -17,7 +17,6 @@ const {
   DOWNLOAD_FILE_SCOPE,
   S3_RECORDINGS_BUCKET_NAME,
   S3_TRANSCODED_RECORDINGS_BUCKET_NAME,
-  DYNAMODB_STANDUPS_TABLE_NAME,
   WORKSPACES_TABLE_NAME
 } = process.env;
 
@@ -36,7 +35,7 @@ const documentClient = new DynamoDB.DocumentClient({
 
 /**
  * Lambda APIG proxy integration that creates a signed URL to upload an audio
- * recording for a standup
+ * recording for a standup.
  *
  * @param {Object} event - HTTP input
  * @param {Object} context - AWS lambda context
@@ -137,8 +136,8 @@ module.exports.createAudioUploadUrl = async (event, context) => {
 };
 
 /**
- * Lambda APIG proxy integration that creates a signed URL, to download a
- * standup update.
+ * Lambda APIG proxy integration that creates a signed URL to download an audio
+ * recording for a standup.
  *
  * @param {Object} event - HTTP input
  * @param {Object} context - AWS lambda context
@@ -154,34 +153,37 @@ module.exports.createAudioUploadUrl = async (event, context) => {
  * For more info on HTTP output see:
  * https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format
  */
-module.exports.createStandupUpdateDownloadUrl = async (event, context) => {
+module.exports.createAudioDownloadUrl = async (event, context) => {
   try {
     const { authorizer } = event.requestContext;
 
+    validateAuthorizer(authorizer);
     validateScope(authorizer.scope, DOWNLOAD_FILE_SCOPE);
 
     const body = bodyParser.json(event.body);
-    const { fileKey } = schema.validateStandupUpdateDownload(body);
+    const { fileKey } = schema.validateAudioDownload(body);
 
-    // A valid S3 key looks like:
-    // "audio/standups/:standupId/(D)D-(M)M-YYYY/:userId/:name.mp3"
+    // A valid S3 file key looks like:
+    // "audio/:workspaceId/:standupId/:recordingId.mp3"
     const [, , standupId] = fileKey.split('/');
-    const userIsStandupMember = await standups.userIsMember(
+
+    // We have to verify that the "standupId" exists in the user's
+    // workspace. If it exists it also means the user has access to the standup
+    const standupExists = await standups.exists(
       documentClient,
-      DYNAMODB_STANDUPS_TABLE_NAME,
-      standupId,
-      authorizer.userId
+      WORKSPACES_TABLE_NAME,
+      authorizer.workspaceId,
+      standupId
     );
-    if (!userIsStandupMember) {
+
+    if (!standupExists) {
       const err = new Error('Standup Not Found');
       err.statusCode = 404;
-      err.details = 'You might not be a member of this standup';
+      err.details = `You might not be a member of this standup, or it doesn't exist.`;
       throw err;
     }
 
-    // 5 minutes
-    const expiresInSec = 60 * 5;
-
+    const expiresInSec = 60 * 5; // 5 minutes
     const url = await signUrl.download(
       s3Client,
       S3_TRANSCODED_RECORDINGS_BUCKET_NAME,

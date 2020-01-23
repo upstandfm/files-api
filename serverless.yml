@@ -56,11 +56,6 @@ provider:
         ]
     # The ARN has the format "arn:aws:dynamodb:::table/tableName"
     # Splitting on "/" gives us the name
-    DYNAMODB_STANDUPS_TABLE_NAME:
-      'Fn::Select':
-        ['1', { 'Fn::Split': ['/', '${state:infra.standupsTableArn}'] }]
-    # The ARN has the format "arn:aws:dynamodb:::table/tableName"
-    # Splitting on "/" gives us the name
     WORKSPACES_TABLE_NAME:
       'Fn::Select':
         ['1', { 'Fn::Split': ['/', '${state:infra.workspacesTableArn}'] }]
@@ -79,10 +74,6 @@ provider:
       # MUST contain "/*" because resource type is "object"
       Resource:
         'Fn::Join': ['/', ['${state:infra.transcodedRecordingsBucketArn}', '*']]
-    - Effect: Allow
-      Action:
-        - dynamodb:GetItem
-      Resource: ${state:infra.standupsTableArn}
     - Effect: Allow
       Action:
         - dynamodb:GetItem
@@ -106,13 +97,13 @@ functions:
           path: /audio/upload
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
-  createStandupUpdateDownloadUrl:
-    handler: src/handler.createStandupUpdateDownloadUrl
-    description: Creates a signed URL to download a standup update
+  createAudioDownloadUrl:
+    handler: src/handler.createAudioDownloadUrl
+    description: Creates a signed URL to download an audio recording for a standup
     events:
       - http:
           method: post
-          path: /standup-update/download
+          path: /audio/download
           cors: ${self:custom.cors}
           authorizer: ${self:custom.authorizer}
 
