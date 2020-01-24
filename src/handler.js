@@ -76,14 +76,14 @@ module.exports.createAudioUploadUrl = async (event, context) => {
     // the metadata itself. And therefore we have to check if it provides the
     // "correct" values for the "workspaceId", "userId", "recordingId".
 
-    if (metadata.workspaceId !== authorizer.workspaceId) {
+    if (metadata['workspace-id'] !== authorizer.workspaceId) {
       const err = new Error('Incorrect Workspace ID');
       err.statusCode = 400;
       err.details = 'Provide your own Workspace ID.';
       throw err;
     }
 
-    if (metadata.userId !== authorizer.userId) {
+    if (metadata['user-id'] !== authorizer.userId) {
       const err = new Error('Incorrect User ID');
       err.statusCode = 400;
       err.details = 'Provide your own User ID.';
@@ -91,7 +91,7 @@ module.exports.createAudioUploadUrl = async (event, context) => {
     }
 
     const [fileId] = filename.split('.');
-    if (metadata.recordingId !== fileId) {
+    if (metadata['recording-id'] !== fileId) {
       const err = new Error('Incorrect Recording ID');
       err.statusCode = 400;
       err.details = 'The Recording ID must match the ID used in the filename.';
@@ -104,7 +104,7 @@ module.exports.createAudioUploadUrl = async (event, context) => {
       documentClient,
       WORKSPACES_TABLE_NAME,
       authorizer.workspaceId,
-      metadata.standupId
+      metadata['standup-id']
     );
 
     if (!standupExists) {
@@ -114,7 +114,7 @@ module.exports.createAudioUploadUrl = async (event, context) => {
       throw err;
     }
 
-    const storageKey = `audio/${authorizer.workspaceId}/${metadata.standupId}/${filename}`;
+    const storageKey = `audio/${authorizer.workspaceId}/${metadata['standup-id']}/${filename}`;
     const expiresInSec = 60 * 5; // 5 minutes
     const url = await signUrl.upload(
       s3Client,

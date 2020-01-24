@@ -21,10 +21,10 @@ const _audioUpload = defaultJoi.object().keys({
     .required(),
 
   metadata: defaultJoi.object().keys({
-    workspaceId: Joi.string().required(),
-    userId: Joi.string().required(),
-    standupId: Joi.string().required(),
-    recordingId: Joi.string().required(),
+    'workspace-id': Joi.string().required(),
+    'user-id': Joi.string().required(),
+    'standup-id': Joi.string().required(),
+    'recording-id': Joi.string().required(),
 
     date: Joi.string()
       // A valid date has format "YYYY-MM-DD"
@@ -53,14 +53,14 @@ const _audioDownload = defaultJoi.object().keys({
 });
 
 function _validate(data, schema) {
-  const { error, value } = schema.validate(data);
+  const { error: schemaErr, value } = schema.validate(data);
 
-  // For Joi "error" see:
+  // For Joi "schemaErr" see:
   // https://github.com/hapijs/joi/blob/master/API.md#validationerror
-  if (error) {
-    const err = new Error('Invalid request data');
+  if (schemaErr) {
+    const err = new Error('Invalid Request Data');
     err.statusCode = 400;
-    err.details = error.details.map(e => e.message);
+    err.details = schemaErr.details.map(e => e.message);
     throw err;
   }
 
