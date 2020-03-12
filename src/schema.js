@@ -10,8 +10,8 @@ const defaultJoi = Joi.defaults(_schema =>
 
 const _audioUpload = defaultJoi.object().keys({
   mimeType: Joi.string()
-    .regex(/^audio\/webm$/, 'mime-type')
-    .required(),
+    .required()
+    .valid('audio/webm'),
 
   filename: Joi.string()
     // A filename has the format ":fileId.webm", e.g. "1a2z3x.webm"
@@ -23,7 +23,7 @@ const _audioUpload = defaultJoi.object().keys({
   metadata: defaultJoi.object().keys({
     'workspace-id': Joi.string().required(),
     'user-id': Joi.string().required(),
-    'standup-id': Joi.string().required(),
+    'channel-id': Joi.string().required(),
     'recording-id': Joi.string().required(),
 
     date: Joi.string()
@@ -44,7 +44,7 @@ const _audioUpload = defaultJoi.object().keys({
 const _audioDownload = defaultJoi.object().keys({
   fileKey: Joi.string()
     // A valid S3 file key looks like:
-    // "audio/:workspaceId/:standupId/:recordingId.mp3"
+    // "audio/:workspaceId/:channelId/:recordingId.mp3"
     .regex(
       /^audio\/[a-zA-Z-0-9_-]{7,14}\/[a-zA-Z-0-9_-]{7,14}\/[a-zA-Z-0-9_-]{7,14}\.mp3$/,
       'file-key'
@@ -53,14 +53,14 @@ const _audioDownload = defaultJoi.object().keys({
 });
 
 function _validate(data, schema) {
-  const { error: schemaErr, value } = schema.validate(data);
+  const { error: joiErr, value } = schema.validate(data);
 
-  // For Joi "schemaErr" see:
+  // For Joi error see:
   // https://github.com/hapijs/joi/blob/master/API.md#validationerror
-  if (schemaErr) {
-    const err = new Error('Invalid Request Data');
+  if (joiErr) {
+    const err = new Error('Invalid request data');
     err.statusCode = 400;
-    err.details = schemaErr.details.map(e => e.message);
+    err.details = joiErr.details.map(e => e.message);
     throw err;
   }
 

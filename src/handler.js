@@ -8,7 +8,7 @@ const handleAndSendError = require('./handle-error');
 const { validateAuthorizer, validateScope } = require('./validators');
 const schema = require('./schema');
 const signUrl = require('./sign-url');
-const standups = require('./standups');
+const channels = require('./channels');
 
 const {
   CORS_ALLOW_ORIGIN,
@@ -77,44 +77,44 @@ module.exports.createAudioUploadUrl = async (event, context) => {
     // "correct" values for the "workspaceId", "userId", "recordingId".
 
     if (metadata['workspace-id'] !== authorizer.workspaceId) {
-      const err = new Error('Incorrect Workspace ID');
+      const err = new Error('Incorrect workspace id');
       err.statusCode = 400;
-      err.details = 'Provide your own Workspace ID.';
+      err.details = 'Provide your own workspace id';
       throw err;
     }
 
     if (metadata['user-id'] !== authorizer.userId) {
-      const err = new Error('Incorrect User ID');
+      const err = new Error('Incorrect user id');
       err.statusCode = 400;
-      err.details = 'Provide your own User ID.';
+      err.details = 'Provide your own user id';
       throw err;
     }
 
     const [fileId] = filename.split('.');
     if (metadata['recording-id'] !== fileId) {
-      const err = new Error('Incorrect Recording ID');
+      const err = new Error('Incorrect recording id');
       err.statusCode = 400;
-      err.details = 'The Recording ID must match the ID used in the filename.';
+      err.details = 'The recording id must match the id used in the filename';
       throw err;
     }
 
-    // We also have to verify that the "standupId" exists in the user's
-    // workspace. If it exists it also means the user has access to the standup
-    const standupExists = await standups.exists(
+    // We also have to verify that the channel exists in the user's
+    // workspace. If it exists it also means the user has access to the channel
+    const channelExists = await channels.exists(
       documentClient,
       WORKSPACES_TABLE_NAME,
       authorizer.workspaceId,
-      metadata['standup-id']
+      metadata['channel-id']
     );
 
-    if (!standupExists) {
-      const err = new Error('Standup Not Found');
+    if (!channelExists) {
+      const err = new Error('Not found');
       err.statusCode = 404;
-      err.details = `You might not be a member of this standup, or it doesn't exist.`;
+      err.details = `You might not have access to this channel, or it doesn't exist`;
       throw err;
     }
 
-    const storageKey = `audio/${authorizer.workspaceId}/${metadata['standup-id']}/${filename}`;
+    const storageKey = `audio/${authorizer.workspaceId}/${metadata['channel-id']}/${filename}`;
     const expiresInSec = 60 * 5; // 5 minutes
     const url = await signUrl.upload(
       s3Client,
@@ -163,22 +163,22 @@ module.exports.createAudioDownloadUrl = async (event, context) => {
     const { fileKey } = schema.validateAudioDownload(body);
 
     // A valid S3 file key looks like:
-    // "audio/:workspaceId/:standupId/:recordingId.mp3"
-    const [, , standupId] = fileKey.split('/');
+    // "audio/:workspaceId/:channelId/:recordingId.mp3"
+    const [, , channelId] = fileKey.split('/');
 
-    // We have to verify that the "standupId" exists in the user's
-    // workspace. If it exists it also means the user has access to the standup
-    const standupExists = await standups.exists(
+    // We have to verify that the channel exists in the user's
+    // workspace. If it exists it also means the user has access to the channel
+    const channelExists = await channels.exists(
       documentClient,
       WORKSPACES_TABLE_NAME,
       authorizer.workspaceId,
-      standupId
+      channelId
     );
 
-    if (!standupExists) {
-      const err = new Error('Standup Not Found');
+    if (!channelExists) {
+      const err = new Error('Not found');
       err.statusCode = 404;
-      err.details = `You might not be a member of this standup, or it doesn't exist.`;
+      err.details = `You might not have access to this channel, or it doesn't exist`;
       throw err;
     }
 
