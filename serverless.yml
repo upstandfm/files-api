@@ -38,8 +38,8 @@ provider:
     # https://github.com/aws/aws-sdk-js/blob/master/CHANGELOG.md#24630
     AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
     CORS_ALLOW_ORIGIN: ${self:custom.cors.origin}
-    UPLOAD_FILE_SCOPE: 'upload:file'
-    DOWNLOAD_FILE_SCOPE: 'download:file'
+    UPLOAD_AUDIO_SCOPE: 'upload:audio'
+    DOWNLOAD_AUDIO_SCOPE: 'download:audio'
     # The ARN has the format "arn:aws:s3:::bucketName"
     # Splitting on ":::" gives us the name
     S3_RECORDINGS_BUCKET_NAME:

@@ -12,8 +12,8 @@ const channels = require('./channels');
 
 const {
   CORS_ALLOW_ORIGIN,
-  UPLOAD_FILE_SCOPE,
-  DOWNLOAD_FILE_SCOPE,
+  UPLOAD_AUDIO_SCOPE,
+  DOWNLOAD_AUDIO_SCOPE,
   S3_RECORDINGS_BUCKET_NAME,
   S3_TRANSCODED_RECORDINGS_BUCKET_NAME,
   WORKSPACES_TABLE_NAME
@@ -55,7 +55,7 @@ module.exports.createAudioUploadUrl = async (event, context) => {
     const { authorizer } = event.requestContext;
 
     validateAuthorizer(authorizer);
-    validateScope(authorizer.scope, UPLOAD_FILE_SCOPE);
+    validateScope(authorizer.scope, UPLOAD_AUDIO_SCOPE);
 
     const body = bodyParser.json(event.body);
     const {
@@ -157,7 +157,7 @@ module.exports.createAudioDownloadUrl = async (event, context) => {
     const { authorizer } = event.requestContext;
 
     validateAuthorizer(authorizer);
-    validateScope(authorizer.scope, DOWNLOAD_FILE_SCOPE);
+    validateScope(authorizer.scope, DOWNLOAD_AUDIO_SCOPE);
 
     const body = bodyParser.json(event.body);
     const { fileKey } = schema.validateAudioDownload(body);
